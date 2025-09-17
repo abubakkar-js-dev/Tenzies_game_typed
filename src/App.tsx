@@ -1,22 +1,31 @@
-import { useState, useRef, useEffect } from "react"
-import Die from "./Die"
+import { useState, useRef, useEffect, type JSX } from "react"
+import Die from "./components/Die"
 import { nanoid } from "nanoid"
-import Confetti from "react-confetti"
+import GameWon from "./components/GameWon"
+import TenziesHeader from "./components/TenziesHeader"
+import DiceContainer from "./components/DiceContainer"
+import RollDiceBtn from "./components/RollDiceBtn"
 
 export default function App() {
-    const [dice, setDice] = useState(() => generateAllNewDice())
+    interface Die {
+      id: string,
+      isHeld: boolean,
+      value: number,
+    }
+    const [dice, setDice] = useState<Die[]>(():Die[] => generateAllNewDice())
+    // console.log(dice);
     const buttonRef = useRef<HTMLButtonElement | null>(null)
 
-    const gameWon = dice.every(die => die.isHeld) &&
-        dice.every(die => die.value === dice[0].value)
+    const gameWon: boolean = dice.every((die: Die) => die.isHeld) &&
+        dice.every((die: Die) => die.value === dice[0].value)
         
     useEffect(() => {
         if (gameWon) {
-            buttonRef.current.focus()
+            buttonRef.current?.focus()
         }
     }, [gameWon])
 
-    function generateAllNewDice() {
+    function generateAllNewDice(): Die[] {
         return new Array(10)
             .fill(0)
             .map(() => ({
@@ -26,9 +35,9 @@ export default function App() {
             }))
     }
     
-    function rollDice() {
+    function rollDice(): void {
         if (!gameWon) {
-            setDice(oldDice => oldDice.map(die =>
+            setDice((oldDice: Die[]) => oldDice.map((die: Die) =>
                 die.isHeld ?
                     die :
                     { ...die, value: Math.ceil(Math.random() * 6) }
@@ -38,15 +47,15 @@ export default function App() {
         }
     }
 
-    function hold(id) {
-        setDice(oldDice => oldDice.map(die =>
+    function hold(id: string): void {
+        setDice((oldDice: Die[]) => oldDice.map((die): Die =>
             die.id === id ?
                 { ...die, isHeld: !die.isHeld } :
                 die
         ))
     }
 
-    const diceElements = dice.map(dieObj => (
+    const diceElements: JSX.Element[] = dice.map((dieObj: Die): JSX.Element => (
         <Die
             key={dieObj.id}
             value={dieObj.value}
@@ -57,7 +66,12 @@ export default function App() {
 
     return (
         <main>
-            {gameWon && <Confetti />}
+            <GameWon isGameWon={gameWon} />
+            <TenziesHeader />
+            <DiceContainer diceElements={diceElements} />
+            <RollDiceBtn buttonRef={buttonRef} isGameWon={gameWon} rollDice={rollDice} />
+
+            {/* {gameWon && <Confetti />}
             <div aria-live="polite" className="sr-only">
                 {gameWon && <p>Congratulations! You won! Press "New Game" to start again.</p>}
             </div>
@@ -68,7 +82,7 @@ export default function App() {
             </div>
             <button ref={buttonRef} className="roll-dice" onClick={rollDice}>
                 {gameWon ? "New Game" : "Roll"}
-            </button>
+            </button> */}
         </main>
     )
 }
